@@ -117,24 +117,6 @@ contract BaseSwap is Ownable, ReentrancyGuard {
     address public receiveTokenAddress; // 接收代币的地址
     mapping(address => bool) public whitelistedAddresses;
 
-    // 首先添加事件
-    event TokensPurchased(
-        address indexed buyer,
-        uint256 ethAmount,
-        uint256 tokensReceived
-    );
-    event DebugLog(string message, uint256 value);
-    event WhitelistUpdated(address indexed account, bool indexed status);
-    event MinAmountOutUpdated(uint256 oldAmount, uint256 newAmount);
-    event PoolFeeUpdated(uint24 oldFee, uint24 newFee);
-    event AmountInUpdated(uint256 oldAmount, uint256 newAmount);
-    event ReceiveAddressUpdated(address oldAddress, address newAddress);
-    event PausedStatusChanged(bool paused);
-    event TargetContractUpdated(
-        address indexed oldAddress,
-        address indexed newAddress
-    );
-
     bool public paused;
     modifier whenNotPaused() {
         require(!paused, "Contract is paused");
@@ -188,7 +170,7 @@ contract BaseSwap is Ownable, ReentrancyGuard {
     }
 
     // Function to buy tokens using ETH through UniswapV3
-    function buyTokens(uint256 amountIn) external nonReentrant whenNotPaused {
+    function buyTokens() external nonReentrant whenNotPaused {
         address daoTokenAddress = getDaoToken();
         require(daoTokenAddress != address(0), "Dao address does not exist");
         require(amountIn > 0, "Invalid amount");
@@ -224,23 +206,17 @@ contract BaseSwap is Ownable, ReentrancyGuard {
 
     function setMinAmountOut(uint256 _minAmount) external onlyOwner {
         require(_minAmount > 0, "Invalid amount");
-        uint256 oldAmount = minAmountOut;
         minAmountOut = _minAmount;
-        emit MinAmountOutUpdated(oldAmount, _minAmount);
     }
 
     function setPoolFee(uint24 _poolFee) external onlyOwner {
         require(_poolFee > 0, "Invalid amount");
-        uint24 oldFee = poolFee;
         poolFee = _poolFee;
-        emit PoolFeeUpdated(oldFee, _poolFee);
     }
 
     function setAmountIn(uint256 _amountIn) external onlyOwner {
         require(_amountIn > 0, "Invalid amount");
-        uint256 oldAmount = amountIn;
         amountIn = _amountIn;
-        emit AmountInUpdated(oldAmount, _amountIn);
     }
 
     // Function to withdraw any stuck tokens (emergency function)
@@ -263,9 +239,7 @@ contract BaseSwap is Ownable, ReentrancyGuard {
         address _receiveAddress
     ) external onlyOwner {
         require(_receiveAddress != address(0), "Invalid address");
-        address oldAddress = receiveTokenAddress;
         receiveTokenAddress = _receiveAddress;
-        emit ReceiveAddressUpdated(oldAddress, _receiveAddress);
     }
 
     modifier onlyWhitelisted() {
@@ -277,7 +251,6 @@ contract BaseSwap is Ownable, ReentrancyGuard {
     function setWhitelist(address account, bool status) external onlyOwner {
         require(account != address(0), "Invalid address");
         whitelistedAddresses[account] = status;
-        emit WhitelistUpdated(account, status);
     }
 
     // 2. 缺少查询白名单状态的函数
@@ -287,7 +260,6 @@ contract BaseSwap is Ownable, ReentrancyGuard {
 
     function setPaused(bool _paused) external onlyOwner {
         paused = _paused;
-        emit PausedStatusChanged(_paused);
     }
 
     // Required to receive ETH
@@ -320,9 +292,7 @@ contract BaseSwap is Ownable, ReentrancyGuard {
             _targetContract != address(0),
             "Invalid target contract address"
         );
-        address oldAddress = targetContract;
         targetContract = _targetContract;
-        emit TargetContractUpdated(oldAddress, _targetContract);
     }
 }
 
